@@ -1,10 +1,10 @@
 #version 460
 out vec4 FragColor;
-
   
 in vec2 TexCoords;
 
-uniform sampler2D screenTexture;
+uniform sampler2D sceneTexture;
+uniform sampler2D brightTexture;
 
 uniform float exposure;
 
@@ -20,6 +20,10 @@ vec4 mapExposure(vec4 hdrColor) {
 
 void main()
 {
-    vec4 color = texture(screenTexture, TexCoords);
-    FragColor = mapExposure(color); 
+    vec3 sceneColor = texture(sceneTexture, TexCoords).rgb;
+    vec3 brightColor = texture(brightTexture, TexCoords).rgb;
+
+    sceneColor += brightColor;
+
+    FragColor = mapExposure(vec4(sceneColor, 1.0)); 
 }

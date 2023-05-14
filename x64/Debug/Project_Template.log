@@ -1,4 +1,1 @@
-﻿  scenebasic_uniform.cpp
-D:\dev\COMP3015-CW2\scenebasic_uniform.cpp(226,24): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-D:\dev\COMP3015-CW2\scenebasic_uniform.cpp(227,28): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-  Project_Template.vcxproj -> D:\dev\COMP3015-CW2\x64\Debug\Project_Template.exe
+﻿  Project_Template.vcxproj -> D:\dev\COMP3015-CW2\x64\Debug\Project_Template.exe

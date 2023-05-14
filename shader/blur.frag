@@ -1,5 +1,7 @@
 #version 460
-out vec4 FragColor;
+
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 _ColorAttachment2;
   
 in vec2 TexCoords;
 
@@ -28,5 +30,5 @@ void main()
     color /= count;
 
     FragColor = color;
-
+    _ColorAttachment2 = vec4(0.0);
 }

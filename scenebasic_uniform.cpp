@@ -167,20 +167,36 @@ void SceneBasic_Uniform::render()
     framebuffer.bind();
     draw_scene();
     framebuffer.unbind();
+    
+    glDisable(GL_DEPTH_TEST);
+    glActiveTexture(GL_TEXTURE0);
 
     // Post Processing
-    bloomShader.use();
-    glDisable(GL_DEPTH_TEST);
-    
-    glActiveTexture(GL_TEXTURE0);
+    blurFramebuffer.bind();
+    blurShader.use();
+    blurShader.setUniform("screenTexture", 0);
+    blurShader.setUniform("exposure", exposure);
+    blurShader.setUniform("blurStrength", 5);
+
     glBindTexture(GL_TEXTURE_2D, framebuffer.textures[1]);
-
-    bloomShader.setUniform("screenTexture", 0);
-    bloomShader.setUniform("exposure", exposure);
-
     glBindVertexArray(quadVAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+    blurFramebuffer.unbind();
+
+    bloomShader.use();
+    glDisable(GL_DEPTH_TEST);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, framebuffer.textures[0]);
+    glActiveTexture(GL_TEXTURE0 + 1);
+    glBindTexture(GL_TEXTURE_2D, blurFramebuffer.textures[0]);
+
+    bloomShader.setUniform("sceneTexture", 0);
+    bloomShader.setUniform("brightTexture", 1);
+    bloomShader.setUniform("exposure", exposure);
+    glBindVertexArray(quadVAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
 void SceneBasic_Uniform::resize(int w, int h)
