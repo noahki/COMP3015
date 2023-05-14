@@ -152,6 +152,7 @@
     <ClCompile Include="helper\glutils.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Model.cpp" />
+    <ClCompile Include="NoiseGen.cpp" />
     <ClCompile Include="scenebasic_uniform.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -172,6 +173,7 @@
     <ClInclude Include="helper\stb\stb_image.h" />
     <ClInclude Include="helper\stb\stb_image_write.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="NoiseGen.h" />
     <ClInclude Include="OBJLoader.h" />
     <ClInclude Include="scenebasic_uniform.h" />
   </ItemGroup>

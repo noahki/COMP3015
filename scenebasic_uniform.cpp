@@ -14,6 +14,7 @@ using std::endl;
 #include "Camera.h"
 #include "Model.h"
 #include "Framebuffer.h"
+#include "NoiseGen.h"
 #include <vector>
 
 using glm::vec3;
@@ -31,6 +32,10 @@ unsigned int quadVBO;
 unsigned int quadEBO;
 
 bool useBlurShader = false;
+
+NoiseGen noiseGen = NoiseGen();
+
+GLuint noiseTexture;
 
 void SceneBasic_Uniform::initScene()
 {
@@ -91,6 +96,8 @@ void SceneBasic_Uniform::initScene()
     fullscreenShader.use();
     fullscreenShader.setUniform("screenTexture", 0);
     prog.use();
+
+    noiseTexture = noiseGen.generate_noise_texture(512, 512);
 }
 
 void SceneBasic_Uniform::compile()
@@ -112,6 +119,10 @@ void SceneBasic_Uniform::compile()
         bloomShader.compileShader("shader/bloom_fullscreen.frag");
         bloomShader.link();
 
+        nightvisionShader.compileShader("shader/nightvision.vert");
+        nightvisionShader.compileShader("shader/nightvision.frag");
+        nightvisionShader.link();
+
         prog.use();
     }
     catch (GLSLProgramException& e) {
@@ -120,7 +131,7 @@ void SceneBasic_Uniform::compile()
     }
 }
 
-glm::vec3 lightPos = glm::vec3(3.0f, 2.0f, -2.0f);
+glm::vec3 lightPos = glm::vec3(3.0f, 5.0f, -2.0f);
 
 float ticks = 0.0f;
 void SceneBasic_Uniform::update(float t)
@@ -170,8 +181,13 @@ void SceneBasic_Uniform::render()
     
     glDisable(GL_DEPTH_TEST);
     glActiveTexture(GL_TEXTURE0);
+    
+    //bloom();
+    nightvision();
+}
 
-    // Post Processing
+void SceneBasic_Uniform::bloom()
+{
     blurFramebuffer.bind();
     blurShader.use();
     blurShader.setUniform("screenTexture", 0);
@@ -195,6 +211,23 @@ void SceneBasic_Uniform::render()
     bloomShader.setUniform("sceneTexture", 0);
     bloomShader.setUniform("brightTexture", 1);
     bloomShader.setUniform("exposure", exposure);
+    glBindVertexArray(quadVAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+}
+
+void SceneBasic_Uniform::nightvision()
+{
+    nightvisionShader.use();
+    glDisable(GL_DEPTH_TEST);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, framebuffer.textures[0]);
+
+    glActiveTexture(GL_TEXTURE0 + 1);
+    glBindTexture(GL_TEXTURE_2D, noiseTexture);
+
+    nightvisionShader.setUniform("sceneTexture", 0);
+    nightvisionShader.setUniform("noiseTexture", 1);
+
     glBindVertexArray(quadVAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
@@ -248,4 +281,7 @@ void SceneBasic_Uniform::handle_mouse_events(GLFWwindow* window) {
 
     camera.apply_mouse_movements(x_diff, y_diff);
 
+    /*if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1)) {
+           
+    }*/
 }

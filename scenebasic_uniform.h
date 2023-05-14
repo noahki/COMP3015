@@ -19,6 +19,7 @@ private:
     GLSLProgram fullscreenShader;
     GLSLProgram blurShader;
     GLSLProgram bloomShader;
+    GLSLProgram nightvisionShader;
     float angle;
 
     void compile();
@@ -42,6 +43,9 @@ public:
     void resize(int, int);
 
     void draw_scene();
+
+    void bloom();
+    void nightvision();
 
     void handle_key_events(GLFWwindow* window);
     void handle_mouse_events(GLFWwindow* window);
