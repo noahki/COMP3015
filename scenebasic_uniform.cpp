@@ -108,6 +108,10 @@ void SceneBasic_Uniform::compile()
         blurShader.compileShader("shader/blur.frag");
         blurShader.link();
 
+        bloomShader.compileShader("shader/bloom_fullscreen.vert");
+        bloomShader.compileShader("shader/bloom_fullscreen.frag");
+        bloomShader.link();
+
         prog.use();
     }
     catch (GLSLProgramException& e) {
@@ -128,13 +132,12 @@ void SceneBasic_Uniform::update(float t)
         cloud->transformation = glm::translate(cloud->transformation, glm::vec3(0.001f, 0.0f, 0.0f));
     }
     ticks += 0.1f;
-    lightPos.x = 5.0f * sinf(ticks * 0.05f);
-    lightPos.z = 5.0f * cosf(ticks * 0.05f);
+    // lightPos.x = 5.0f * sinf(ticks * 0.05f);
+    // lightPos.z = 5.0f * cosf(ticks * 0.05f);
 }
 
-void SceneBasic_Uniform::render()
+void SceneBasic_Uniform::draw_scene()
 {
-    framebuffer.bind();
     glEnable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glActiveTexture(GL_TEXTURE0);
@@ -156,36 +159,24 @@ void SceneBasic_Uniform::render()
         prog.setUniform("hasTexture", cloud->hasTexture ? 1 : 0);
         cloud->render();
     }
+}
 
+void SceneBasic_Uniform::render()
+{
+    // Draw scene to framebuffer.
+    framebuffer.bind();
+    draw_scene();
     framebuffer.unbind();
-    blurFramebuffer.bind();
 
-    glDisable(GL_DEPTH_TEST);
-    glActiveTexture(GL_TEXTURE0);
-    
-    blurFramebuffer.bind();
-    blurShader.use();
-    blurShader.setUniform("screenTexture", 0);
-    blurShader.setUniform("blurStrength", 2);
-
-    glBindTexture(GL_TEXTURE_2D, framebuffer.texture);
-    glBindVertexArray(quadVAO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-    blurFramebuffer.unbind();
-
-    fullscreenShader.use();
+    // Post Processing
+    bloomShader.use();
     glDisable(GL_DEPTH_TEST);
     
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, blurFramebuffer.texture);
-    glActiveTexture(GL_TEXTURE0 + 1);
-    glBindTexture(GL_TEXTURE_2D, framebuffer.texture);
+    glBindTexture(GL_TEXTURE_2D, framebuffer.textures[1]);
 
-    fullscreenShader.setUniform("blurredTexture", 0);
-    fullscreenShader.setUniform("screenTexture", 1);
-    fullscreenShader.setUniform("useBlur", useBlurShader ? 1 : 0);
-    fullscreenShader.setUniform("exposure", exposure);
+    bloomShader.setUniform("screenTexture", 0);
+    bloomShader.setUniform("exposure", exposure);
 
     glBindVertexArray(quadVAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

@@ -18,6 +18,7 @@ private:
     GLSLProgram prog;
     GLSLProgram fullscreenShader;
     GLSLProgram blurShader;
+    GLSLProgram bloomShader;
     float angle;
 
     void compile();
@@ -39,6 +40,8 @@ public:
     void update( float t );
     void render();
     void resize(int, int);
+
+    void draw_scene();
 
     void handle_key_events(GLFWwindow* window);
     void handle_mouse_events(GLFWwindow* window);

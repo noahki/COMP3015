@@ -21,6 +21,8 @@ void Model::render() {
 	}
 
 	glBindVertexArray(vaoHandle);
+	unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+	glDrawBuffers(2, attachments);
     glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
