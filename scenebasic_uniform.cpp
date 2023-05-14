@@ -166,6 +166,7 @@ void SceneBasic_Uniform::render()
     blurFramebuffer.bind();
     blurShader.use();
     blurShader.setUniform("screenTexture", 0);
+    blurShader.setUniform("blurStrength", 2);
 
     glBindTexture(GL_TEXTURE_2D, framebuffer.texture);
     glBindVertexArray(quadVAO);
@@ -184,6 +185,7 @@ void SceneBasic_Uniform::render()
     fullscreenShader.setUniform("blurredTexture", 0);
     fullscreenShader.setUniform("screenTexture", 1);
     fullscreenShader.setUniform("useBlur", useBlurShader ? 1 : 0);
+    fullscreenShader.setUniform("exposure", exposure);
 
     glBindVertexArray(quadVAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -214,6 +216,10 @@ void SceneBasic_Uniform::handle_key_events(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
         camera.camera_pos.y -= camera_speed;
 
+    if (glfwGetKey(window, GLFW_KEY_P))
+        exposure += 0.07f;
+    if (glfwGetKey(window, GLFW_KEY_O))
+        exposure -= 0.07f;
 }
 
 void SceneBasic_Uniform::handle_mouse_events(GLFWwindow* window) {

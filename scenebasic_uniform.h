@@ -30,6 +30,8 @@ private:
     double old_x_pos = -1.0;
     double old_y_pos = -1.0;
 
+    float exposure = 1.0f;
+
 public:
     SceneBasic_Uniform();
 
