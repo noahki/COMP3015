@@ -87,7 +87,7 @@ int Model::load_from_file(const char* filename)
 	bool loaded = loader.LoadFile(filename);
 
 	if (!loaded) {
-		std::cout << "Couldnt load file" << std::endl;
+		std::cout << "Couldn't load file: " << filename << std::endl;
 		return -1;
 	}
 

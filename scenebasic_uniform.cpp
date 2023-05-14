@@ -190,10 +190,6 @@ void SceneBasic_Uniform::render()
 
 }
 
-void SceneBasic_Uniform::toggleBlur() {
-    useBlurShader = !useBlurShader;
-}
-
 void SceneBasic_Uniform::resize(int w, int h)
 {
     width = w;

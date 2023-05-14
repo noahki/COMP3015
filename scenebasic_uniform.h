@@ -38,8 +38,6 @@ public:
     void render();
     void resize(int, int);
 
-    void toggleBlur();
-
     void handle_key_events(GLFWwindow* window);
     void handle_mouse_events(GLFWwindow* window);
 };

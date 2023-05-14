@@ -136,10 +136,6 @@ private:
 
             scene.handle_key_events(window);
             scene.handle_mouse_events(window);
-
-			int state = glfwGetKey(window, GLFW_KEY_SPACE);
-			if (state == GLFW_PRESS)
-				scene.toggleBlur();
         }
     }
 };

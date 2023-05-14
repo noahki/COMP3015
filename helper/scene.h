@@ -21,8 +21,6 @@ public:
 	    height = h;
 	}
 
-    virtual void toggleBlur() = 0;
-	
     /**
       Load textures, initialize shaders, etc.
       */
