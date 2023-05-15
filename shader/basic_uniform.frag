@@ -20,7 +20,7 @@ void main() {
     } else {
         color = vec3(1.0, 1.0, 1.0);
     }
-    vec3 ambient = 0.05 * color;
+    vec3 ambient = 0.005 * color;
 
     vec3 lightDirection = normalize(lightPos - VertexPos);
     vec3 normal = normalize(Normal);

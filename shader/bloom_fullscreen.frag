@@ -1,5 +1,7 @@
 #version 460
-out vec4 FragColor;
+
+layout (location=0) out vec4 FragColor;
+layout (location=1) out vec4 _ColorAttachment2;
   
 in vec2 TexCoords;
 
@@ -26,4 +28,5 @@ void main()
     sceneColor += brightColor;
 
     FragColor = mapExposure(vec4(sceneColor, 1.0)); 
+    _ColorAttachment2 = vec4(0.0);
 }

@@ -83,8 +83,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Dependencies\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Dependencies\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\dev\libraries\include;$(IncludePath);C:\dependencies\include;</IncludePath>
+    <LibraryPath>D:\dev\libraries\lib;$(LibraryPath);C:\dependencies\lib;</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

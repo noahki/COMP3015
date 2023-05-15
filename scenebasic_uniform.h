@@ -10,6 +10,7 @@
 #include <GLFW/glfw3.h>
 
 #include "Camera.h"
+#include "Framebuffer.h"
 
 class SceneBasic_Uniform : public Scene
 {
@@ -20,6 +21,7 @@ private:
     GLSLProgram blurShader;
     GLSLProgram bloomShader;
     GLSLProgram nightvisionShader;
+    GLSLProgram terrainShader;
     float angle;
 
     void compile();
@@ -34,6 +36,17 @@ private:
 
     float exposure = 1.0f;
 
+    bool mouse_down = false;
+
+    int max_scenes = 4;
+    int current_scene = 0;
+
+    Framebuffer framebuffer = Framebuffer();
+    Framebuffer blur_framebuffer = Framebuffer();
+    Framebuffer bloom_framebuffer = Framebuffer();
+
+    GLuint terrainTexture;
+
 public:
     SceneBasic_Uniform();
 
@@ -43,9 +56,11 @@ public:
     void resize(int, int);
 
     void draw_scene();
+    void draw_terrain();
+    void draw_tree();
 
     void bloom();
-    void nightvision();
+    void nightvision(bool useBloomFramebuffer);
 
     void handle_key_events(GLFWwindow* window);
     void handle_mouse_events(GLFWwindow* window);

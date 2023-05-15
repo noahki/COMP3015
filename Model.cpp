@@ -17,6 +17,7 @@ void Model::render() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	if (hasTexture) {
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture);
 	}
 
@@ -94,21 +95,23 @@ int Model::load_from_file(const char* filename)
 	}
 
 	if (loaded && loader.LoadedMeshes.size() > 0) {
-		auto mesh = loader.LoadedMeshes[0];
+		for (auto meshIndex = 0; meshIndex < loader.LoadedMeshes.size(); meshIndex++) {
+			auto mesh = loader.LoadedMeshes[meshIndex];
 
-		for (auto i = 0; i < mesh.Vertices.size(); i++) {
-			vertices.push_back(mesh.Vertices[i].Position.X);
-			vertices.push_back(mesh.Vertices[i].Position.Y);
-			vertices.push_back(mesh.Vertices[i].Position.Z);
+			for (auto i = 0; i < mesh.Vertices.size(); i++) {
+				vertices.push_back(mesh.Vertices[i].Position.X);
+				vertices.push_back(mesh.Vertices[i].Position.Y);
+				vertices.push_back(mesh.Vertices[i].Position.Z);
 
-			textureCoords.push_back(mesh.Vertices[i].TextureCoordinate.X);
-			textureCoords.push_back(mesh.Vertices[i].TextureCoordinate.Y);
+				textureCoords.push_back(mesh.Vertices[i].TextureCoordinate.X);
+				textureCoords.push_back(mesh.Vertices[i].TextureCoordinate.Y);
 
-			indices.push_back(mesh.Indices[i]);
+				indices.push_back(mesh.Indices[i]);
 
-			normals.push_back(mesh.Vertices[i].Normal.X);
-			normals.push_back(mesh.Vertices[i].Normal.Y);
-			normals.push_back(mesh.Vertices[i].Normal.Z);
+				normals.push_back(mesh.Vertices[i].Normal.X);
+				normals.push_back(mesh.Vertices[i].Normal.Y);
+				normals.push_back(mesh.Vertices[i].Normal.Z);
+			}
 		}
 	}
 

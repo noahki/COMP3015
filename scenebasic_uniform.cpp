@@ -13,7 +13,6 @@ using std::endl;
 #include "helper/glutils.h"
 #include "Camera.h"
 #include "Model.h"
-#include "Framebuffer.h"
 #include "NoiseGen.h"
 #include <vector>
 
@@ -24,8 +23,7 @@ SceneBasic_Uniform::SceneBasic_Uniform() : angle(0.0f) {}
 std::vector<Model> clouds = std::vector<Model>();
 
 Model plane = Model();
-Framebuffer framebuffer = Framebuffer();
-Framebuffer blurFramebuffer = Framebuffer();
+Model tree = Model();
 
 unsigned int quadVAO;
 unsigned int quadVBO;
@@ -52,24 +50,25 @@ void SceneBasic_Uniform::initScene()
     for (int i = 0; i < 10; i++) {
         Model cloud;
         cloud.load_from_file("./clouds.obj");
-        //cloud.transformation = glm::rotate(cloud.transformation, glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        //cloud.transformation = glm::rotate(cloud.transformation, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         cloud.transformation = glm::translate(cloud.transformation, glm::vec3(-5.0f + rand() % 10, 2.0f + rand() % 2, (float)-i * 2));
         cloud.transformation = glm::scale(cloud.transformation, glm::vec3(0.2f));
 
         clouds.push_back(cloud);
     }
 
-
     plane.load_from_file("./plane.obj");
     plane.load_texture("./GroundTexture.png");
-    //plane.transformation = glm::rotate(plane.transformation, glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    tree.load_from_file("./tree.obj");
+    tree.load_texture("./TreeTexture.png");
+    tree.transformation = glm::scale(tree.transformation, glm::vec3(0.07f));
 
     camera = Camera();
     projMatrix = glm::perspective(glm::radians(70.0f), 1280.0f / 720.0f, 1.0f, 100.0f);
 
     framebuffer.init();
-    blurFramebuffer.init();
+    blur_framebuffer.init();
+    bloom_framebuffer.init();
 
     GLfloat quadVertices[] = {
         // Positions   // Texture coordinates
@@ -97,7 +96,8 @@ void SceneBasic_Uniform::initScene()
     fullscreenShader.setUniform("screenTexture", 0);
     prog.use();
 
-    noiseTexture = noiseGen.generate_noise_texture(512, 512);
+    noiseTexture = noiseGen.generate_noise_texture(256, 256);
+    terrainTexture = noiseGen.generate_noise_texture(64, 64);
 }
 
 void SceneBasic_Uniform::compile()
@@ -131,7 +131,7 @@ void SceneBasic_Uniform::compile()
     }
 }
 
-glm::vec3 lightPos = glm::vec3(3.0f, 5.0f, -2.0f);
+glm::vec3 lightPos = glm::vec3(3.0f, 5.0f, 1.0f);
 
 float ticks = 0.0f;
 void SceneBasic_Uniform::update(float t)
@@ -143,8 +143,6 @@ void SceneBasic_Uniform::update(float t)
         cloud->transformation = glm::translate(cloud->transformation, glm::vec3(0.001f, 0.0f, 0.0f));
     }
     ticks += 0.1f;
-    // lightPos.x = 5.0f * sinf(ticks * 0.05f);
-    // lightPos.z = 5.0f * cosf(ticks * 0.05f);
 }
 
 void SceneBasic_Uniform::draw_scene()
@@ -156,11 +154,10 @@ void SceneBasic_Uniform::draw_scene()
     prog.setUniform("cameraMatrix", camera.get_camera_transformation());
     prog.setUniform("lightPos", lightPos);
     prog.setUniform("eyePos", glm::vec3(0.0f));
-    prog.setUniform("Lights[0].Intensity", glm::vec3(0.5f));
+    prog.setUniform("Lights[0].Intensity", glm::vec3(0.1f));
     
     prog.setUniform("modelMatrix", plane.transformation);
     prog.setUniform("hasTexture", plane.hasTexture ? 1 : 0);
-    plane.render();
 
     prog.setUniform("projMatrix", projMatrix);
 
@@ -172,23 +169,66 @@ void SceneBasic_Uniform::draw_scene()
     }
 }
 
+void SceneBasic_Uniform::draw_tree()
+{
+    prog.use();
+    prog.setUniform("cameraMatrix", camera.get_camera_transformation());
+    prog.setUniform("lightPos", lightPos);
+    prog.setUniform("eyePos", glm::vec3(0.0f));
+    prog.setUniform("Lights[0].Intensity", glm::vec3(0.5f));
+
+    prog.setUniform("modelMatrix", tree.transformation);
+    prog.setUniform("hasTexture", tree.hasTexture ? 1 : 0);
+
+    prog.setUniform("projMatrix", projMatrix);
+    tree.render();
+}
+
+void SceneBasic_Uniform::draw_terrain()
+{
+    prog.use();
+    prog.setUniform("cameraMatrix", camera.get_camera_transformation());
+    prog.setUniform("lightPos", lightPos);
+    prog.setUniform("eyePos", glm::vec3(0.0f));
+    prog.setUniform("Lights[0].Intensity", glm::vec3(0.5f));
+
+    prog.setUniform("modelMatrix", plane.transformation);
+    prog.setUniform("hasTexture", plane.hasTexture ? 1 : 0);
+
+    prog.setUniform("projMatrix", projMatrix);
+
+    plane.render();
+}
+
 void SceneBasic_Uniform::render()
 {
     // Draw scene to framebuffer.
     framebuffer.bind();
     draw_scene();
+    draw_tree();
+    draw_terrain();
     framebuffer.unbind();
     
     glDisable(GL_DEPTH_TEST);
     glActiveTexture(GL_TEXTURE0);
     
-    //bloom();
-    nightvision();
+    if (current_scene == 0)
+        bloom();
+    else if (current_scene == 1)
+        nightvision(false);
+    else if (current_scene == 2) {
+        bloom();
+        nightvision(true);
+    }
+    else if (current_scene == 3) {
+        plane.texture = framebuffer.textures[0];
+        bloom();
+    }
 }
 
 void SceneBasic_Uniform::bloom()
 {
-    blurFramebuffer.bind();
+    blur_framebuffer.bind();
     blurShader.use();
     blurShader.setUniform("screenTexture", 0);
     blurShader.setUniform("exposure", exposure);
@@ -198,29 +238,46 @@ void SceneBasic_Uniform::bloom()
     glBindVertexArray(quadVAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-    blurFramebuffer.unbind();
-
+    blur_framebuffer.unbind();
+    bloom_framebuffer.bind();
     bloomShader.use();
     glDisable(GL_DEPTH_TEST);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, framebuffer.textures[0]);
     glActiveTexture(GL_TEXTURE0 + 1);
-    glBindTexture(GL_TEXTURE_2D, blurFramebuffer.textures[0]);
+    glBindTexture(GL_TEXTURE_2D, blur_framebuffer.textures[0]);
 
     bloomShader.setUniform("sceneTexture", 0);
     bloomShader.setUniform("brightTexture", 1);
     bloomShader.setUniform("exposure", exposure);
     glBindVertexArray(quadVAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    bloom_framebuffer.unbind();
+
+    fullscreenShader.use();
+    glDisable(GL_DEPTH_TEST);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, bloom_framebuffer.textures[0]);
+
+    fullscreenShader.setUniform("screenTexture", 0);
+    fullscreenShader.setUniform("exposure", exposure);
+    glBindVertexArray(quadVAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
-void SceneBasic_Uniform::nightvision()
+void SceneBasic_Uniform::nightvision(bool useBloomFramebuffer)
 {
     nightvisionShader.use();
     glDisable(GL_DEPTH_TEST);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, framebuffer.textures[0]);
+    if (useBloomFramebuffer) {
+        glBindTexture(GL_TEXTURE_2D, bloom_framebuffer.textures[0]);
+    }
+    else {
+        glBindTexture(GL_TEXTURE_2D, framebuffer.textures[0]);
+    }
 
     glActiveTexture(GL_TEXTURE0 + 1);
     glBindTexture(GL_TEXTURE_2D, noiseTexture);
@@ -256,10 +313,11 @@ void SceneBasic_Uniform::handle_key_events(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
         camera.camera_pos.y -= camera_speed;
 
+    float exposure_delta = 0.02f;
     if (glfwGetKey(window, GLFW_KEY_P))
-        exposure += 0.07f;
+        exposure += exposure_delta;
     if (glfwGetKey(window, GLFW_KEY_O))
-        exposure -= 0.07f;
+        exposure -= exposure_delta;
 }
 
 void SceneBasic_Uniform::handle_mouse_events(GLFWwindow* window) {
@@ -281,7 +339,14 @@ void SceneBasic_Uniform::handle_mouse_events(GLFWwindow* window) {
 
     camera.apply_mouse_movements(x_diff, y_diff);
 
-    /*if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1)) {
-           
-    }*/
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS && !mouse_down) {
+        mouse_down = true;
+        current_scene++;
+        if (current_scene >= max_scenes)
+            current_scene = 0;
+        std::cout << "Current Scene: " << current_scene << std::endl;
+    }
+
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_RELEASE)
+        mouse_down = false;
 }
